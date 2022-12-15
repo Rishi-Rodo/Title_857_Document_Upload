@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.zip.ZipInputStream;
 
 // *********
 // * Flows *
@@ -108,7 +109,7 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
     private String uploadAttachment(String fileName, ServiceHub service,String uploader, byte[] document_array) throws IOException {
         SecureHash attachmentHash = service.getAttachments().importAttachment(
-                new ByteArrayInputStream(document_array)
+                new ZipInputStream(new ByteArrayInputStream(document_array))
                 ,uploader,fileName);
 
         return attachmentHash.toString();
