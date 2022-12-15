@@ -1,0 +1,4 @@
+rootProject.name = 'Title857_DocUpload_Poc'
+include 'contracts'
+include 'workflows'
+
