@@ -57,7 +57,7 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
         // Obtain a reference to a notary we wish to use.
         /** Explicit selection of notary by CordaX500Name - argument can by coded in flows or parsed from config (Preferred)*/
-        final Party notary = getServiceHub().getNetworkMapCache().getNotary(CordaX500Name.parse("O=Notary,L=London,C=GB"));
+        final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
         // Initiate transaction Builder
         TransactionBuilder transactionBuilder = new TransactionBuilder(notary);
 

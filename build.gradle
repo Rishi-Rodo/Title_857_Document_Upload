@@ -110,204 +110,44 @@ dependencies {
 //Task to deploy the nodes in order to bootstrap a network
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
 
-    /* This property will load the CorDapps to each of the node by default, including the Notary. You can find them
-     * in the cordapps folder of the node at build/nodes/Notary/cordapps. However, the notary doesn't really understand
-     * the notion of cordapps. In production, Notary does not need cordapps as well. This is just a short cut to load
-     * the Corda network bootstrapper.
-     */
     nodeDefaults {
-        projectCordapp {
-            deploy = false
-        }
-        cordapp project(':contracts')
-        cordapp project(':workflows')
-        //cordapp project(':common')
 
-        runSchemaMigration = true //This configuration is for any CorDapps with custom schema, We will leave this as true to avoid
-        //problems for developers who are not familiar with Corda. If you are not using custom schemas, you can change
-        //it to false for quicker project compiling time.
+        projectCordapp {
+            deploy = true
+        }
+
+        cordapp project('contracts')
+        cordapp project('workflows')
+        runSchemaMigration = true
     }
 
     node {
-        name "O=Jay,L=New York,C=US"
-        notary = [validating : false]
+        name "O=Notary,L=London,C=GB"
+        notary = [validating: false]
         p2pPort 10002
         rpcSettings {
             address("localhost:10003")
             adminAddress("localhost:10043")
         }
     }
+
     node {
-        name "O=Hamilton,L=New York,C=US"
+        name "O=Buyer,L=London,C=GB"
         p2pPort 10005
         rpcSettings {
             address("localhost:10006")
             adminAddress("localhost:10046")
         }
-
-//        cordapps = [
-//                "com.rodo:title-contract-state-schema:$version",
-//        ]
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
-    }
-
-//    node {
-//        name "O=Walcott,L=New York,C=US"
-//        p2pPort 10008
-//        rpcSettings {
-//            address("localhost:10009")
-//            adminAddress("localhost:10049")
-//        }
-//        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
-//    }
-
-//    node {
-//        name "O=Ford,L=Texas,C=US"
-//        p2pPort 10011
-//        rpcSettings {
-//            address("localhost:10012")
-//            adminAddress("localhost:10052")
-//        }
-//        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
-//    }
-
-    node {
-        name "O=Toyota,L=New York,C=US"
-        p2pPort 10014
-        rpcSettings {
-            address("localhost:10015")
-            adminAddress("localhost:10055")
-        }
-
-//        cordapps = [
-//                "com.rodo:title-contract-state-schema:$version",
-//        ]
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
+        rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
 
     node {
-        name "O=Madison,L=New York,C=US"
-        p2pPort 10017
+        name "O=Seller,L=New York,C=US"
+        p2pPort 10008
         rpcSettings {
-            address("localhost:10018")
-            adminAddress("localhost:10058")
+            address("localhost:10009")
+            adminAddress("localhost:10049")
         }
-
-//        cordapps = [
-//                "com.rodo:title-contract-state-schema:$version",
-//        ]
-
-        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
+        rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
-
-//    node {
-//        name "O=Monroe,L=Texas,C=US"
-//        p2pPort 10020
-//        rpcSettings {
-//            address("localhost:10021")
-//            adminAddress("localhost:10061")
-//        }
-//        rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
-//    }
-
-
-}
-
-enum OS {
-    MAC,
-    WIN,
-    LINUX
-}
-
-OS getOSName() {
-    def osName = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH)
-    if (osName.contains("mac") || osName.contains("darwin")) {
-        return OS.MAC
-    } else if (osName.contains("win")) {
-        return OS.WIN
-    } else return OS.LINUX
-}
-
-boolean isTmux() {
-    System.getenv("TMUX") == null ? false : true
-}
-/* This task can made more clean and generic or customized as per requirement, though conveys the idea of reading the node.conf file and it's custom properties
-Usage: gradle createServer -Penv=dev || gradle createServer -Penv=prod
-*/
-
-task createServer(dependsOn: [':rodo-madison-server:bootJar']) {
-    doLast {
-        int serverPort = 8081 // initial server port
-        println 'Started create server task'
-        def hasEnv = project.hasProperty('env')
-        if (!hasEnv) {
-            println "env: dev, selected. intialServer Port is now set to $serverPort"
-        }
-        if (hasEnv && !(env.toLowerCase() in ['dev', 'prod'])) {
-            println "Invalid env: $env, only dev and prod supported!."
-        } else {
-            if (hasEnv && env.toLowerCase() == 'prod') {
-                serverPort = 5050
-                println "env: $env, selected. intialServer Port is now set to $serverPort ."
-            }
-            OS os = getOSName()
-            println "Operating System $os"
-            def rootBuildFolder = "./build/nodes/"
-            def starterBatFile = new File(rootBuildFolder + "runserver.bat")
-            def starterShFile = new File(rootBuildFolder + "runserver.sh")
-            if (starterBatFile.exists() || starterShFile.exists()) {
-                starterBatFile.delete()
-                starterShFile.delete()
-            }
-            String regx = "[^A-Za-z0-9]"
-            def winCMD = "start "
-            def linux = "x-terminal-emulator -e "
-            def linuxTmux = "tmux new-window -n "
-            def macStart = "osascript -e 'tell app \"Terminal\" to do script \""
-            def macEnd = "\"'"
-            def newLine = System.getProperty("line.separator")
-            new File(rootBuildFolder).listFiles().sort { it.name }.each { File dir ->
-                if (dir.isDirectory() && !dir.getName().find(regx) && !(dir.getName().toLowerCase() in ["jay", "web-logs", "oracle","toyota","hamilton"])) {
-                    Config config = ConfigFactory.parseFile(new File(dir.getPath() + "/node.conf"))
-                    def rpcAddress = config.getString("rpcSettings.address")
-//                    def rpcUsers = (HashMap) config.getAnyRefList("rpcUsers").get(0)
-//                    def password = rpcUsers.get("password")
-//                    def user = rpcUsers.get("user")
-                    String javaCommand = " java -Dnodename=" + dir.getName() +
-                            " -Dconfig.rpc.password=" + "test" +
-                            " -Dconfig.rpc.address=" + rpcAddress +
-                            " -Dmyprocessname=smcdev"+
-                            " -Dconfig.rpc.username=" + "user1" +
-                            " -Dserver.port=" + (serverPort++) +
-                            " -jar " + getJarName(dir.getName())
-                    if (os == OS.WIN) {
-                        starterBatFile.append(winCMD + javaCommand + newLine)
-                        return
-                    }
-                    if (os == OS.MAC) {
-                        starterShFile.append(macStart + javaCommand + macEnd + newLine)
-                        return
-                    }
-                    if (os == OS.LINUX)
-                        if (isTmux()) {
-                            starterShFile.append(linuxTmux + dir.getName()+"-server" + " '" + javaCommand + "'" + newLine)
-                        } else {
-                            starterShFile.append(linux + javaCommand + newLine)
-                        }
-                }
-            }
-            println 'Finished create server task'
-        }
-    }
-}
-
-private String getJarName(String name) {
-    println(name);
-    if(name.toLowerCase().contains('madison'))
-        return project(':rodo-madison-server').jar.outputs.files.getSingleFile()
-    else if(name.toLowerCase().contains('hamilton'))
-        return project(':rodo-hamilton-server').jar.outputs.files.getSingleFile()
-    else if(name.toLowerCase().contains('toyota'))
-        return project(':rodo-toyota-server').jar.outputs.files.getSingleFile()
-    else throw TaskExecutionException("Invalid name found")
 }
