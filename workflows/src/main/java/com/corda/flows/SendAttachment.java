@@ -13,11 +13,11 @@ import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.zip.ZipInputStream;
 
@@ -27,6 +27,9 @@ import java.util.zip.ZipInputStream;
 @InitiatingFlow
 @StartableByRPC
 public class SendAttachment extends FlowLogic<SignedTransaction> {
+
+    private final static Logger logger = LoggerFactory.getLogger(SendAttachment.class);
+
     private final ProgressTracker.Step GENERATING_TRANSACTION = new ProgressTracker.Step("Generating transaction");
     private final ProgressTracker.Step PROCESSING_TRANSACTION = new ProgressTracker.Step("PROCESS transaction");
     private final ProgressTracker.Step FINALISING_TRANSACTION = new ProgressTracker.Step("Obtaining notary signature and recording transaction.");
@@ -108,9 +111,13 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
     }
 
     private String uploadAttachment(String fileName, ServiceHub service,String uploader, byte[] document_array) throws IOException {
+
+        logger.info("byte Array:" + Arrays.toString(document_array));
+
+        InputStream input = new ByteArrayInputStream(document_array);
+
         SecureHash attachmentHash = service.getAttachments().importAttachment(
-                new ZipInputStream(new ByteArrayInputStream(document_array))
-                ,uploader,fileName);
+                input,uploader,fileName);
 
         return attachmentHash.toString();
     }
