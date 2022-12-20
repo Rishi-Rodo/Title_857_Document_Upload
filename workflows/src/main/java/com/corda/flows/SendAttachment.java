@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.google.common.collect.ImmutableList;
 import com.rodo.contract.InvoiceContract;
 import com.rodo.states.InvoiceState;
+import javassist.bytecode.ByteArray;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
 import net.corda.core.identity.CordaX500Name;
@@ -19,7 +20,10 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 // *********
 // * Flows *
@@ -114,7 +118,9 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
         logger.info("byte Array:" + Arrays.toString(document_array));
 
-        InputStream input = new ByteArrayInputStream(document_array);
+        FileInputStream input = new FileInputStream(new ByteArrayInputStream(document_array).toString());
+
+        logger.info("Input object" + input.toString());
 
         SecureHash attachmentHash = service.getAttachments().importAttachment(
                 input,uploader,fileName);
