@@ -118,7 +118,7 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
         logger.info("byte Array:" + Arrays.toString(document_array));
 
-        FileInputStream input = new FileInputStream(new ByteArrayInputStream(document_array).toString());
+        FileInputStream input = new FileInputStream(document_array.toString());
 
         logger.info("Input object" + input.toString());
 
