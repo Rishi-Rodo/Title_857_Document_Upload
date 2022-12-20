@@ -1,9 +1,11 @@
 package com.corda.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
+import com.esotericsoftware.kryo.io.ByteBufferInput;
 import com.google.common.collect.ImmutableList;
 import com.rodo.contract.InvoiceContract;
 import com.rodo.states.InvoiceState;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import javassist.bytecode.ByteArray;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
@@ -118,7 +120,7 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
         logger.info("byte Array:" + Arrays.toString(document_array));
 
-        FileInputStream input = new FileInputStream(document_array.toString());
+        InputStream input = new BufferedInputStream(new ByteBufferInput(document_array));
 
         logger.info("Input object" + input.toString());
 
