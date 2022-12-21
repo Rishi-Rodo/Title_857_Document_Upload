@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.io.*;
 import java.util.Arrays;
 import java.util.UUID;
@@ -114,7 +115,7 @@ public class SendAttachment extends FlowLogic<SignedTransaction> {
 
         logger.info("byte Array:" + Arrays.toString(document_array));
 
-        InputStream input = new BufferedInputStream(new ByteBufferInput(document_array));
+        InputStream input = new ByteArrayInputStream(document_array);
 
         logger.info("Input object" + input.toString());
 
